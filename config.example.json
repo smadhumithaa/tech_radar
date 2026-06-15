@@ -1,0 +1,15 @@
+{
+  "groq_api_key": "YOUR_GROQ_API_KEY_HERE",
+  "newsapi_key": "",
+  "gnews_key": "",
+  "refresh_interval_minutes": 60,
+  "notify_hot_only": false,
+  "categories": [
+    "launch",
+    "ai",
+    "alert",
+    "security",
+    "hardware",
+    "general"
+  ]
+}

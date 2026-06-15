@@ -15,6 +15,9 @@ env/
 db/news.db
 db/*.db
 
+# Config with secrets — copy config.example.json and fill in your keys
+config.json
+
 # Misnamed dir from earlier pip attempt
 {assets,db}/
 
