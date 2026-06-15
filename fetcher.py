@@ -152,7 +152,12 @@ def groq_only_fetch(groq_api_key: str) -> List[Dict]:
     match = re.search(r"\[[\s\S]*\]", raw)
     if not match:
         raise ValueError(f"No JSON in Groq fallback response:\n{raw[:300]}")
-    return json.loads(match.group(0))
+    articles = json.loads(match.group(0))
+    # URLs from Groq-only mode are hallucinated — clear them to avoid 404s
+    for a in articles:
+        a["url"] = ""
+        a["ai_generated"] = True
+    return articles
 
 
 def fetch_tech_news(groq_api_key: str) -> List[Dict]:

@@ -301,6 +301,15 @@
     }
     .card:hover .card-link-label { opacity: 1; }
 
+    .ai-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 11px; color: var(--text3);
+      background: rgba(255,255,255,.04);
+      border: 1px solid var(--border);
+      border-radius: 20px; padding: 3px 10px;
+    }
+    .ai-badge svg { opacity: .6; }
+
     /* category colors */
     .cat-launch   { background:rgba(14,165,233,.15); color:#38bdf8; border:1px solid rgba(14,165,233,.25); }
     .cat-ai       { background:rgba(139,92,246,.15); color:#a78bfa; border:1px solid rgba(139,92,246,.25); }
@@ -702,9 +711,10 @@ function renderFeed() {
 
   document.getElementById('feed').innerHTML = articles.map((a, i) => {
     const m = catMeta(a.category);
-    const url = a.url && a.url !== '#' ? a.url : null;
-    const tag = url ? 'a' : 'div';
-    const linkAttr = url ? `href="${escHtml(a.url)}" target="_blank" rel="noopener"` : '';
+  const hasUrl = a.url && a.url !== '#' && a.url.startsWith('http');
+    const isAI  = !!a.ai_generated;
+    const tag   = hasUrl ? 'a' : 'div';
+    const linkAttr = hasUrl ? `href="${escHtml(a.url)}" target="_blank" rel="noopener"` : '';
     const delay = Math.min(i * 0.04, 0.8);
 
     return `<${tag} ${linkAttr} class="card${a.is_hot ? ' hot' : ''}" role="listitem"
@@ -719,12 +729,17 @@ function renderFeed() {
       </div>
       <div class="card-title">${escHtml(a.title || '')}</div>
       <div class="card-summary">${escHtml(a.summary || '')}</div>
-      ${url ? `<div class="card-footer">
+      ${hasUrl ? `<div class="card-footer">
         <span class="card-link-label">
           Read article
           <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/>
           </svg>
+        </span>
+      </div>` : isAI ? `<div class="card-footer">
+        <span class="ai-badge">
+          <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+          AI Generated · No source link
         </span>
       </div>` : ''}
     </${tag}>`;

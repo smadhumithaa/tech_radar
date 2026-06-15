@@ -13,18 +13,25 @@ def init_db(db_path: Path):
     conn = sqlite3.connect(db_path)
     conn.execute("""
         CREATE TABLE IF NOT EXISTS articles (
-            id          TEXT PRIMARY KEY,
-            title       TEXT NOT NULL,
-            summary     TEXT,
-            category    TEXT DEFAULT 'general',
-            source      TEXT,
-            url         TEXT,
-            is_hot      INTEGER DEFAULT 0,
-            time_ago    TEXT,
-            notified    INTEGER DEFAULT 0,
-            fetched_at  TEXT DEFAULT (datetime('now'))
+            id           TEXT PRIMARY KEY,
+            title        TEXT NOT NULL,
+            summary      TEXT,
+            category     TEXT DEFAULT 'general',
+            source       TEXT,
+            url          TEXT,
+            is_hot       INTEGER DEFAULT 0,
+            time_ago     TEXT,
+            notified     INTEGER DEFAULT 0,
+            ai_generated INTEGER DEFAULT 0,
+            fetched_at   TEXT DEFAULT (datetime('now'))
         )
     """)
+    # Migrate existing DBs that lack the ai_generated column
+    try:
+        conn.execute("ALTER TABLE articles ADD COLUMN ai_generated INTEGER DEFAULT 0")
+        conn.commit()
+    except Exception:
+        pass  # Column already exists
     conn.commit()
     conn.close()
 
@@ -42,8 +49,8 @@ def save_articles(conn: sqlite3.Connection, articles: List[Dict]) -> int:
         try:
             conn.execute(
                 """INSERT OR IGNORE INTO articles
-                   (id, title, summary, category, source, url, is_hot, time_ago)
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+                   (id, title, summary, category, source, url, is_hot, time_ago, ai_generated)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                 (
                     aid,
                     a.get("title", ""),
@@ -53,6 +60,7 @@ def save_articles(conn: sqlite3.Connection, articles: List[Dict]) -> int:
                     a.get("url", ""),
                     1 if a.get("is_hot") else 0,
                     a.get("time_ago", ""),
+                    1 if a.get("ai_generated") else 0,
                 ),
             )
             if conn.execute("SELECT changes()").fetchone()[0]:
@@ -65,20 +73,20 @@ def save_articles(conn: sqlite3.Connection, articles: List[Dict]) -> int:
 
 def get_recent_articles(conn: sqlite3.Connection, limit=30) -> List[Dict]:
     rows = conn.execute(
-        """SELECT id, title, summary, category, source, url, is_hot, time_ago
+        """SELECT id, title, summary, category, source, url, is_hot, time_ago, ai_generated
            FROM articles ORDER BY fetched_at DESC LIMIT ?""",
         (limit,),
     ).fetchall()
-    cols = ["id", "title", "summary", "category", "source", "url", "is_hot", "time_ago"]
+    cols = ["id", "title", "summary", "category", "source", "url", "is_hot", "time_ago", "ai_generated"]
     return [dict(zip(cols, r)) for r in rows]
 
 
 def get_unnotified(conn: sqlite3.Connection) -> List[Dict]:
     rows = conn.execute(
-        """SELECT id, title, summary, category, source, url, is_hot, time_ago
+        """SELECT id, title, summary, category, source, url, is_hot, time_ago, ai_generated
            FROM articles WHERE notified=0 ORDER BY is_hot DESC, fetched_at DESC"""
     ).fetchall()
-    cols = ["id", "title", "summary", "category", "source", "url", "is_hot", "time_ago"]
+    cols = ["id", "title", "summary", "category", "source", "url", "is_hot", "time_ago", "ai_generated"]
     return [dict(zip(cols, r)) for r in rows]
 
 
