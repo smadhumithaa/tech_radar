@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TechRadar — AI Tech Briefing</title>
+  <meta name="description" content="AI-powered tech news dashboard — curated by Groq LLaMA, delivered to your desktop." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    /* ── Reset & Tokens ─────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:          #0a0c14;
+      --bg2:         #0f1220;
+      --surface:     rgba(255,255,255,0.035);
+      --surface2:    rgba(255,255,255,0.06);
+      --border:      rgba(255,255,255,0.08);
+      --border2:     rgba(255,255,255,0.14);
+
+      --accent:      #6c63ff;
+      --accent2:     #8b5cf6;
+      --cyan:        #22d3ee;
+      --emerald:     #10b981;
+      --amber:       #f59e0b;
+      --red:         #ef4444;
+      --rose:        #f43f5e;
+      --sky:         #38bdf8;
+
+      --text:        #f0f2f8;
+      --text2:       #9da5c0;
+      --text3:       #5c6480;
+
+      --radius-sm:   8px;
+      --radius:      14px;
+      --radius-lg:   20px;
+      --radius-xl:   28px;
+
+      --shadow:      0 4px 24px rgba(0,0,0,.4);
+      --shadow-lg:   0 8px 40px rgba(0,0,0,.6);
+      --glow:        0 0 30px rgba(108,99,255,.18);
+      --glow-hot:    0 0 20px rgba(244,63,94,.25);
+
+      --transition:  all .22s cubic-bezier(.4,0,.2,1);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── Animated BG ────────────────────────────────────────────────────── */
+    .bg-orbs {
+      position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      overflow: hidden;
+    }
+    .orb {
+      position: absolute; border-radius: 50%;
+      filter: blur(80px); opacity: .12; animation: drift 18s ease-in-out infinite;
+    }
+    .orb-1 { width:500px; height:500px; background:var(--accent);  top:-100px; left:-100px; animation-delay:0s; }
+    .orb-2 { width:350px; height:350px; background:var(--cyan);    top:30%; right:-80px;   animation-delay:-6s; }
+    .orb-3 { width:280px; height:280px; background:var(--rose);    bottom:5%; left:30%;    animation-delay:-12s; }
+
+    @keyframes drift {
+      0%,100% { transform: translate(0,0) scale(1); }
+      33%      { transform: translate(30px,-40px) scale(1.08); }
+      66%      { transform: translate(-20px, 25px) scale(.94); }
+    }
+
+    /* ── Layout ─────────────────────────────────────────────────────────── */
+    .layout {
+      position: relative; z-index: 1;
+      max-width: 1100px; margin: 0 auto;
+      padding: 0 20px 60px;
+    }
+
+    /* ── Header ─────────────────────────────────────────────────────────── */
+    header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 28px 0 0;
+      gap: 16px; flex-wrap: wrap;
+    }
+
+    .brand {
+      display: flex; align-items: center; gap: 14px;
+    }
+    .brand-icon {
+      width: 46px; height: 46px; border-radius: 14px;
+      background: linear-gradient(135deg, var(--accent), var(--cyan));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+      box-shadow: 0 0 20px rgba(108,99,255,.4);
+      animation: pulse-glow 3s ease-in-out infinite;
+    }
+    @keyframes pulse-glow {
+      0%,100% { box-shadow: 0 0 20px rgba(108,99,255,.4); }
+      50%      { box-shadow: 0 0 35px rgba(108,99,255,.7); }
+    }
+    .brand-text h1 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 22px; font-weight: 700; letter-spacing: -.3px;
+    }
+    .brand-text p {
+      font-size: 12px; color: var(--text3); margin-top: 2px;
+    }
+
+    .header-actions { display: flex; gap: 10px; align-items: center; }
+
+    .btn {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 9px 18px; border-radius: var(--radius-sm);
+      font-size: 13px; font-weight: 500; cursor: pointer;
+      border: none; transition: var(--transition); white-space: nowrap;
+      font-family: inherit;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(108,99,255,.4);
+    }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(108,99,255,.55); }
+    .btn-ghost {
+      background: var(--surface2); color: var(--text2);
+      border: 1px solid var(--border2);
+    }
+    .btn-ghost:hover { background: rgba(255,255,255,.1); color: var(--text); }
+    .btn-icon { padding: 9px 12px; }
+
+    #refresh-btn svg { transition: var(--transition); }
+    #refresh-btn.spinning svg { animation: spin .8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Status bar ─────────────────────────────────────────────────────── */
+    .status-bar {
+      display: flex; align-items: center; gap: 6px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 30px; padding: 6px 14px;
+      font-size: 12px; color: var(--text3);
+    }
+    .status-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--emerald);
+      box-shadow: 0 0 6px var(--emerald);
+      animation: blink 2s ease-in-out infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+    /* ── Stats row ──────────────────────────────────────────────────────── */
+    .stats-row {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px; margin: 24px 0;
+    }
+    .stat-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 18px 20px;
+      display: flex; flex-direction: column; gap: 6px;
+      transition: var(--transition);
+      backdrop-filter: blur(12px);
+    }
+    .stat-card:hover { border-color: var(--border2); transform: translateY(-2px); }
+    .stat-label { font-size: 11px; color: var(--text3); font-weight: 500; text-transform: uppercase; letter-spacing: .06em; }
+    .stat-value { font-family: 'Space Grotesk', sans-serif; font-size: 28px; font-weight: 700; }
+    .stat-value.accent  { color: var(--accent); }
+    .stat-value.hot     { color: var(--rose); }
+    .stat-value.emerald { color: var(--emerald); }
+    .stat-value.cyan    { color: var(--cyan); }
+    .stat-sub { font-size: 11px; color: var(--text3); }
+
+    /* ── Filter bar ─────────────────────────────────────────────────────── */
+    .filter-bar {
+      display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+      margin-bottom: 20px;
+    }
+    .filter-label { font-size: 12px; color: var(--text3); margin-right: 4px; }
+
+    .pill {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 6px 14px; border-radius: 30px; font-size: 12px;
+      font-weight: 500; cursor: pointer; border: 1px solid var(--border);
+      background: var(--surface); color: var(--text2);
+      transition: var(--transition); white-space: nowrap;
+      font-family: inherit;
+    }
+    .pill:hover { border-color: var(--border2); color: var(--text); }
+    .pill.active {
+      background: var(--accent); border-color: var(--accent);
+      color: #fff; box-shadow: 0 0 12px rgba(108,99,255,.4);
+    }
+    .pill[data-cat="ai"].active       { background: #8b5cf6; border-color: #8b5cf6; box-shadow: 0 0 12px rgba(139,92,246,.4); }
+    .pill[data-cat="launch"].active   { background: #0ea5e9; border-color: #0ea5e9; box-shadow: 0 0 12px rgba(14,165,233,.4); }
+    .pill[data-cat="security"].active { background: #f59e0b; border-color: #f59e0b; box-shadow: 0 0 12px rgba(245,158,11,.4); }
+    .pill[data-cat="alert"].active    { background: #ef4444; border-color: #ef4444; box-shadow: 0 0 12px rgba(239,68,68,.4); }
+    .pill[data-cat="hardware"].active { background: #10b981; border-color: #10b981; box-shadow: 0 0 12px rgba(16,185,129,.4); }
+    .pill[data-cat="general"].active  { background: #6b7280; border-color: #6b7280; box-shadow: 0 0 12px rgba(107,114,128,.4); }
+
+    .search-wrap {
+      margin-left: auto;
+      display: flex; align-items: center;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 30px; padding: 6px 14px; gap: 8px;
+      transition: var(--transition);
+    }
+    .search-wrap:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(108,99,255,.15); }
+    .search-wrap svg { color: var(--text3); flex-shrink: 0; }
+    #search-input {
+      background: none; border: none; outline: none;
+      color: var(--text); font-size: 13px; width: 180px;
+      font-family: inherit;
+    }
+    #search-input::placeholder { color: var(--text3); }
+
+    /* ── Feed ───────────────────────────────────────────────────────────── */
+    .section-title {
+      font-size: 11px; font-weight: 600; color: var(--text3);
+      text-transform: uppercase; letter-spacing: .1em;
+      margin-bottom: 12px; display: flex; align-items: center; gap: 8px;
+    }
+    .section-title::after {
+      content: ''; flex: 1; height: 1px; background: var(--border);
+    }
+
+    #feed { display: flex; flex-direction: column; gap: 10px; }
+
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 18px 20px;
+      display: block; text-decoration: none; color: inherit;
+      transition: var(--transition);
+      backdrop-filter: blur(10px);
+      animation: fadeUp .35s ease both;
+      position: relative; overflow: hidden;
+    }
+    .card::before {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,.025), transparent);
+      pointer-events: none;
+    }
+    .card:hover {
+      border-color: var(--border2);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow);
+    }
+    .card.hot {
+      border-color: rgba(244,63,94,.3);
+      box-shadow: var(--glow-hot);
+    }
+    .card.hot::before {
+      background: linear-gradient(135deg, rgba(244,63,94,.06), transparent);
+    }
+    .card.hot:hover { border-color: rgba(244,63,94,.55); }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .card-top {
+      display: flex; align-items: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap;
+    }
+    .cat-badge {
+      padding: 3px 10px; border-radius: 20px; font-size: 10px;
+      font-weight: 600; text-transform: uppercase; letter-spacing: .06em;
+    }
+    .hot-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 10px; border-radius: 20px; font-size: 10px;
+      font-weight: 600; background: rgba(244,63,94,.15); color: #f87171;
+      border: 1px solid rgba(244,63,94,.3);
+      animation: hot-pulse 2s ease-in-out infinite;
+    }
+    @keyframes hot-pulse { 0%,100%{opacity:1} 50%{opacity:.7} }
+
+    .card-meta {
+      margin-left: auto; font-size: 11px; color: var(--text3);
+      display: flex; align-items: center; gap: 6px;
+    }
+    .card-meta .dot { width: 3px; height: 3px; border-radius: 50%; background: var(--text3); }
+
+    .card-title {
+      font-size: 15px; font-weight: 600; color: var(--text);
+      margin-bottom: 8px; line-height: 1.45;
+      letter-spacing: -.01em;
+    }
+    .card-summary { font-size: 13px; color: var(--text2); line-height: 1.65; }
+
+    .card-footer {
+      margin-top: 12px; display: flex; align-items: center; gap: 8px;
+    }
+    .card-link-label {
+      margin-left: auto; font-size: 11px; color: var(--accent);
+      opacity: 0; transition: opacity .2s;
+      display: flex; align-items: center; gap: 4px;
+    }
+    .card:hover .card-link-label { opacity: 1; }
+
+    /* category colors */
+    .cat-launch   { background:rgba(14,165,233,.15); color:#38bdf8; border:1px solid rgba(14,165,233,.25); }
+    .cat-ai       { background:rgba(139,92,246,.15); color:#a78bfa; border:1px solid rgba(139,92,246,.25); }
+    .cat-alert    { background:rgba(239,68,68,.15);  color:#f87171; border:1px solid rgba(239,68,68,.25); }
+    .cat-security { background:rgba(245,158,11,.15); color:#fbbf24; border:1px solid rgba(245,158,11,.25); }
+    .cat-hardware { background:rgba(16,185,129,.15); color:#34d399; border:1px solid rgba(16,185,129,.25); }
+    .cat-general  { background:rgba(107,114,128,.15);color:#9ca3af; border:1px solid rgba(107,114,128,.25); }
+
+    /* ── Empty state ────────────────────────────────────────────────────── */
+    .empty-state {
+      text-align: center; padding: 80px 20px;
+      display: flex; flex-direction: column; align-items: center; gap: 16px;
+    }
+    .empty-icon { font-size: 48px; animation: float 3s ease-in-out infinite; }
+    @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
+    .empty-title { font-size: 18px; font-weight: 600; color: var(--text2); }
+    .empty-sub   { font-size: 14px; color: var(--text3); max-width: 340px; }
+
+    /* ── Loading skeleton ───────────────────────────────────────────────── */
+    .skeleton-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 18px 20px;
+      display: flex; flex-direction: column; gap: 10px;
+    }
+    .skel {
+      border-radius: 6px; background: linear-gradient(90deg,
+        rgba(255,255,255,.04) 25%, rgba(255,255,255,.09) 50%, rgba(255,255,255,.04) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.6s infinite;
+    }
+    .skel-top  { height: 18px; width: 140px; }
+    .skel-title{ height: 22px; width: 85%; }
+    .skel-line { height: 14px; }
+    .skel-line.w70 { width: 70%; }
+    @keyframes shimmer { to { background-position: -200% 0; } }
+
+    /* ── Settings panel ─────────────────────────────────────────────────── */
+    .panel-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,.6);
+      backdrop-filter: blur(4px); z-index: 100;
+      opacity: 0; pointer-events: none; transition: opacity .25s;
+    }
+    .panel-overlay.open { opacity: 1; pointer-events: all; }
+
+    .panel {
+      position: fixed; right: 0; top: 0; bottom: 0;
+      width: min(420px, 92vw);
+      background: #111525; border-left: 1px solid var(--border2);
+      z-index: 101; overflow-y: auto;
+      transform: translateX(100%); transition: transform .3s cubic-bezier(.4,0,.2,1);
+      padding: 28px 24px;
+      display: flex; flex-direction: column; gap: 24px;
+    }
+    .panel.open { transform: translateX(0); }
+
+    .panel-header {
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .panel-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 18px; font-weight: 700;
+    }
+    .close-btn {
+      background: var(--surface2); border: 1px solid var(--border);
+      color: var(--text2); border-radius: 8px; padding: 6px 10px;
+      cursor: pointer; font-size: 18px; transition: var(--transition);
+    }
+    .close-btn:hover { color: var(--text); background: var(--surface2); }
+
+    .form-group { display: flex; flex-direction: column; gap: 8px; }
+    .form-label { font-size: 12px; font-weight: 500; color: var(--text2); }
+    .form-input {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 10px 14px;
+      color: var(--text); font-size: 13px; font-family: inherit;
+      outline: none; transition: var(--transition); width: 100%;
+    }
+    .form-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(108,99,255,.12); }
+
+    .toggle-row {
+      display: flex; align-items: center; justify-content: space-between;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 12px 14px;
+    }
+    .toggle-info { display: flex; flex-direction: column; gap: 2px; }
+    .toggle-info b { font-size: 13px; font-weight: 500; }
+    .toggle-info span { font-size: 11px; color: var(--text3); }
+    .toggle {
+      width: 40px; height: 22px; background: var(--surface2);
+      border: 1px solid var(--border); border-radius: 30px;
+      cursor: pointer; position: relative; transition: var(--transition);
+      flex-shrink: 0;
+    }
+    .toggle.on { background: var(--accent); border-color: var(--accent); }
+    .toggle::after {
+      content: ''; position: absolute;
+      width: 16px; height: 16px; border-radius: 50%; background: #fff;
+      top: 2px; left: 2px; transition: transform .2s;
+    }
+    .toggle.on::after { transform: translateX(18px); }
+
+    .cat-checkboxes { display: flex; flex-wrap: wrap; gap: 8px; }
+    .cat-check {
+      display: flex; align-items: center; gap: 6px; cursor: pointer;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 20px; padding: 5px 12px; transition: var(--transition);
+      font-size: 12px;
+    }
+    .cat-check input { display: none; }
+    .cat-check:has(input:checked) { border-color: var(--accent); color: var(--accent); }
+    .save-btn { margin-top: 4px; }
+
+    .settings-section { border-top: 1px solid var(--border); padding-top: 20px; }
+    .settings-section-title {
+      font-size: 11px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: .08em; color: var(--text3); margin-bottom: 14px;
+    }
+
+    /* ── Toast ──────────────────────────────────────────────────────────── */
+    #toast {
+      position: fixed; bottom: 28px; right: 28px; z-index: 200;
+      background: #1e2235; border: 1px solid var(--border2);
+      border-radius: var(--radius); padding: 12px 20px;
+      font-size: 13px; color: var(--text);
+      box-shadow: var(--shadow-lg);
+      transform: translateY(20px); opacity: 0; pointer-events: none;
+      transition: all .3s cubic-bezier(.4,0,.2,1);
+      display: flex; align-items: center; gap: 10px;
+    }
+    #toast.show { transform: translateY(0); opacity: 1; }
+    #toast.success { border-color: rgba(16,185,129,.4); }
+    #toast.error   { border-color: rgba(239,68,68,.4); }
+
+    /* ── Divider ────────────────────────────────────────────────────────── */
+    .divider {
+      height: 1px; background: var(--border); margin: 6px 0;
+    }
+
+    /* ── Responsive ─────────────────────────────────────────────────────── */
+    @media (max-width: 640px) {
+      header { padding: 20px 0 0; }
+      .stats-row { grid-template-columns: repeat(2, 1fr); }
+      .search-wrap { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Ambient background orbs -->
+<div class="bg-orbs">
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+</div>
+
+<!-- Settings overlay -->
+<div class="panel-overlay" id="panel-overlay"></div>
+
+<!-- Settings panel -->
+<aside class="panel" id="settings-panel" role="dialog" aria-label="Settings">
+  <div class="panel-header">
+    <span class="panel-title">⚙️ Settings</span>
+    <button class="close-btn" id="close-panel-btn" aria-label="Close settings">✕</button>
+  </div>
+
+  <div class="settings-section">
+    <div class="settings-section-title">API Keys</div>
+    <div class="form-group">
+      <label class="form-label" for="cfg-groq-key">Groq API Key</label>
+      <input id="cfg-groq-key" class="form-input" type="password" placeholder="gsk_..." autocomplete="off" />
+    </div>
+    <div class="form-group" style="margin-top:12px">
+      <label class="form-label" for="cfg-newsapi-key">NewsAPI Key <span style="color:var(--text3)">(optional)</span></label>
+      <input id="cfg-newsapi-key" class="form-input" type="text" placeholder="Leave blank to use Groq-only mode" />
+    </div>
+    <div class="form-group" style="margin-top:12px">
+      <label class="form-label" for="cfg-gnews-key">GNews Key <span style="color:var(--text3)">(optional)</span></label>
+      <input id="cfg-gnews-key" class="form-input" type="text" placeholder="Leave blank to use Groq-only mode" />
+    </div>
+  </div>
+
+  <div class="settings-section">
+    <div class="settings-section-title">Refresh & Notifications</div>
+    <div class="form-group">
+      <label class="form-label" for="cfg-interval">Auto-refresh interval (minutes)</label>
+      <input id="cfg-interval" class="form-input" type="number" min="5" max="1440" value="60" />
+    </div>
+    <div class="toggle-row" style="margin-top:12px">
+      <div class="toggle-info">
+        <b>Hot stories only</b>
+        <span>Only notify for 🔴 breaking stories</span>
+      </div>
+      <div class="toggle" id="cfg-hot-toggle" role="switch" aria-checked="false" tabindex="0"></div>
+    </div>
+  </div>
+
+  <div class="settings-section">
+    <div class="settings-section-title">Tracked Categories</div>
+    <div class="cat-checkboxes" id="cfg-categories">
+      <label class="cat-check"><input type="checkbox" value="launch" checked> 🚀 Launch</label>
+      <label class="cat-check"><input type="checkbox" value="ai" checked> 🤖 AI</label>
+      <label class="cat-check"><input type="checkbox" value="alert" checked> 🔴 Alert</label>
+      <label class="cat-check"><input type="checkbox" value="security" checked> 🔒 Security</label>
+      <label class="cat-check"><input type="checkbox" value="hardware" checked> 💾 Hardware</label>
+      <label class="cat-check"><input type="checkbox" value="general" checked> 📰 General</label>
+    </div>
+  </div>
+
+  <button class="btn btn-primary save-btn" id="save-settings-btn" style="width:100%;justify-content:center">
+    Save Settings
+  </button>
+</aside>
+
+<!-- Toast notification -->
+<div id="toast" role="alert" aria-live="polite"></div>
+
+<!-- Main content -->
+<div class="layout">
+
+  <!-- Header -->
+  <header>
+    <div class="brand">
+      <div class="brand-icon">🛰</div>
+      <div class="brand-text">
+        <h1>TechRadar</h1>
+        <p>AI-powered tech briefing · Groq LLaMA</p>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <div class="status-bar" id="status-bar">
+        <div class="status-dot"></div>
+        <span id="status-text">Loading…</span>
+      </div>
+      <button class="btn btn-ghost btn-icon" id="settings-btn" aria-label="Open settings" title="Settings">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+        </svg>
+      </button>
+      <button class="btn btn-primary" id="refresh-btn" aria-label="Refresh news">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+          <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
+          <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
+        </svg>
+        Refresh
+      </button>
+    </div>
+  </header>
+
+  <!-- Stats row -->
+  <div class="stats-row" id="stats-row">
+    <div class="stat-card">
+      <div class="stat-label">Total Stories</div>
+      <div class="stat-value accent" id="stat-total">—</div>
+      <div class="stat-sub">in database</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">🔴 Breaking</div>
+      <div class="stat-value hot" id="stat-hot">—</div>
+      <div class="stat-sub">hot stories</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Categories</div>
+      <div class="stat-value emerald" id="stat-cats">—</div>
+      <div class="stat-sub">tracked</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Last Fetch</div>
+      <div class="stat-value cyan" id="stat-last" style="font-size:18px">—</div>
+      <div class="stat-sub" id="stat-last-full">—</div>
+    </div>
+  </div>
+
+  <!-- Filter bar -->
+  <div class="filter-bar" id="filter-bar">
+    <span class="filter-label">Filter</span>
+    <button class="pill active" data-cat="all" id="pill-all">All</button>
+    <button class="pill" data-cat="ai">🤖 AI</button>
+    <button class="pill" data-cat="launch">🚀 Launch</button>
+    <button class="pill" data-cat="security">🔒 Security</button>
+    <button class="pill" data-cat="alert">🔴 Alert</button>
+    <button class="pill" data-cat="hardware">💾 Hardware</button>
+    <button class="pill" data-cat="general">📰 General</button>
+    <div class="search-wrap">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input id="search-input" type="text" placeholder="Search stories…" autocomplete="off" aria-label="Search stories" />
+    </div>
+  </div>
+
+  <!-- Feed -->
+  <div class="section-title" id="feed-label">Stories</div>
+  <div id="feed" role="list" aria-label="Tech news feed">
+    <!-- Skeleton placeholders -->
+    <div class="skeleton-card"><div class="skel skel-top"></div><div class="skel skel-title"></div><div class="skel skel-line"></div><div class="skel skel-line w70"></div></div>
+    <div class="skeleton-card"><div class="skel skel-top"></div><div class="skel skel-title"></div><div class="skel skel-line"></div><div class="skel skel-line w70"></div></div>
+    <div class="skeleton-card"><div class="skel skel-top"></div><div class="skel skel-title"></div><div class="skel skel-line"></div><div class="skel skel-line w70"></div></div>
+  </div>
+</div>
+
+<script>
+/* ── Config ─────────────────────────────────────────────────────────────── */
+const API = 'http://127.0.0.1:7474';
+let currentCategory = 'all';
+let searchQuery = '';
+let allArticles = [];
+let hotToggleOn = false;
+let autoRefreshTimer = null;
+
+/* ── Category badge helper ──────────────────────────────────────────────── */
+const CAT_META = {
+  launch:   { emoji: '🚀', cls: 'cat-launch',   label: 'Launch'   },
+  ai:       { emoji: '🤖', cls: 'cat-ai',       label: 'AI'       },
+  alert:    { emoji: '🔴', cls: 'cat-alert',    label: 'Alert'    },
+  security: { emoji: '🔒', cls: 'cat-security', label: 'Security' },
+  hardware: { emoji: '💾', cls: 'cat-hardware', label: 'Hardware' },
+  general:  { emoji: '📰', cls: 'cat-general',  label: 'General'  },
+};
+function catMeta(cat) { return CAT_META[cat] || CAT_META.general; }
+
+/* ── Toast ──────────────────────────────────────────────────────────────── */
+let toastTimer;
+function showToast(msg, type = '') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = `show ${type}`;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { el.className = ''; }, 3000);
+}
+
+/* ── Fetch data ─────────────────────────────────────────────────────────── */
+async function loadStats() {
+  try {
+    const r = await fetch(`${API}/api/stats`);
+    const s = await r.json();
+    document.getElementById('stat-total').textContent = s.total ?? '—';
+    document.getElementById('stat-hot').textContent   = s.hot   ?? '—';
+    document.getElementById('stat-cats').textContent  = Object.keys(s.categories || {}).length || '—';
+    if (s.last_fetch) {
+      const d = new Date(s.last_fetch + 'Z');
+      document.getElementById('stat-last').textContent      = d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+      document.getElementById('stat-last-full').textContent = d.toLocaleDateString([], {day:'numeric',month:'short',year:'numeric'});
+    }
+    document.getElementById('status-text').textContent = `${s.total || 0} stories · live`;
+  } catch {
+    document.getElementById('status-text').textContent = 'Server offline — open from tray';
+  }
+}
+
+async function loadArticles() {
+  try {
+    const url = `${API}/api/articles?category=${currentCategory}&limit=60`;
+    const r = await fetch(url);
+    const data = await r.json();
+    allArticles = data.articles || [];
+    renderFeed();
+  } catch {
+    renderOfflineState();
+  }
+}
+
+function renderOfflineState() {
+  document.getElementById('feed').innerHTML = `
+    <div class="empty-state">
+      <div class="empty-icon">📡</div>
+      <div class="empty-title">Server not reachable</div>
+      <div class="empty-sub">Make sure TechRadar is running in the system tray, then refresh this page.</div>
+    </div>`;
+}
+
+/* ── Render feed ────────────────────────────────────────────────────────── */
+function renderFeed() {
+  const q = searchQuery.toLowerCase();
+  let articles = allArticles.filter(a => {
+    if (!q) return true;
+    return (a.title || '').toLowerCase().includes(q) ||
+           (a.summary || '').toLowerCase().includes(q) ||
+           (a.source || '').toLowerCase().includes(q);
+  });
+
+  const label = document.getElementById('feed-label');
+  label.textContent = articles.length
+    ? `${articles.length} ${currentCategory === 'all' ? 'Stories' : CAT_META[currentCategory]?.label + ' Stories'}`
+    : 'Stories';
+
+  if (!articles.length) {
+    document.getElementById('feed').innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">${q ? '🔍' : '🛸'}</div>
+        <div class="empty-title">${q ? 'No results found' : 'No stories yet'}</div>
+        <div class="empty-sub">${q ? 'Try a different search term.' : 'Click Refresh to fetch the latest tech news.'}</div>
+      </div>`;
+    return;
+  }
+
+  // Sort: hot first
+  articles = [...articles].sort((a,b) => (b.is_hot||0) - (a.is_hot||0));
+
+  document.getElementById('feed').innerHTML = articles.map((a, i) => {
+    const m = catMeta(a.category);
+    const url = a.url && a.url !== '#' ? a.url : null;
+    const tag = url ? 'a' : 'div';
+    const linkAttr = url ? `href="${escHtml(a.url)}" target="_blank" rel="noopener"` : '';
+    const delay = Math.min(i * 0.04, 0.8);
+
+    return `<${tag} ${linkAttr} class="card${a.is_hot ? ' hot' : ''}" role="listitem"
+        style="animation-delay:${delay}s">
+      <div class="card-top">
+        <span class="cat-badge ${m.cls}">${m.emoji} ${m.label}</span>
+        ${a.is_hot ? '<span class="hot-badge">🔴 Breaking</span>' : ''}
+        <div class="card-meta">
+          <span>${escHtml(a.source || '')}</span>
+          ${a.time_ago ? `<span class="dot"></span><span>${escHtml(a.time_ago)}</span>` : ''}
+        </div>
+      </div>
+      <div class="card-title">${escHtml(a.title || '')}</div>
+      <div class="card-summary">${escHtml(a.summary || '')}</div>
+      ${url ? `<div class="card-footer">
+        <span class="card-link-label">
+          Read article
+          <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/>
+          </svg>
+        </span>
+      </div>` : ''}
+    </${tag}>`;
+  }).join('');
+}
+
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+/* ── Refresh ────────────────────────────────────────────────────────────── */
+async function triggerRefresh() {
+  const btn = document.getElementById('refresh-btn');
+  btn.classList.add('spinning');
+  btn.disabled = true;
+  document.getElementById('status-text').textContent = 'Fetching news…';
+  try {
+    await fetch(`${API}/api/refresh`);
+    showToast('🔄 Refresh started — check back in a moment', 'success');
+    // Poll until new data arrives (up to 30s)
+    let attempts = 0;
+    const poll = setInterval(async () => {
+      attempts++;
+      await Promise.all([loadStats(), loadArticles()]);
+      if (attempts > 10) { clearInterval(poll); }
+    }, 3000);
+    setTimeout(() => { clearInterval(poll); }, 35000);
+  } catch {
+    showToast('⚠️ Could not reach TechRadar server', 'error');
+  } finally {
+    setTimeout(() => {
+      btn.classList.remove('spinning');
+      btn.disabled = false;
+    }, 2000);
+  }
+}
+
+/* ── Filter pills ───────────────────────────────────────────────────────── */
+document.getElementById('filter-bar').addEventListener('click', e => {
+  const pill = e.target.closest('.pill');
+  if (!pill) return;
+  currentCategory = pill.dataset.cat;
+  document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+  pill.classList.add('active');
+  loadArticles();
+});
+
+/* ── Search ─────────────────────────────────────────────────────────────── */
+let searchDebounce;
+document.getElementById('search-input').addEventListener('input', e => {
+  clearTimeout(searchDebounce);
+  searchDebounce = setTimeout(() => {
+    searchQuery = e.target.value.trim();
+    renderFeed();
+  }, 200);
+});
+
+/* ── Refresh button ─────────────────────────────────────────────────────── */
+document.getElementById('refresh-btn').addEventListener('click', triggerRefresh);
+
+/* ── Settings panel ─────────────────────────────────────────────────────── */
+function openSettings() {
+  document.getElementById('settings-panel').classList.add('open');
+  document.getElementById('panel-overlay').classList.add('open');
+  loadSettingsFromAPI();
+}
+function closeSettings() {
+  document.getElementById('settings-panel').classList.remove('open');
+  document.getElementById('panel-overlay').classList.remove('open');
+}
+document.getElementById('settings-btn').addEventListener('click', openSettings);
+document.getElementById('close-panel-btn').addEventListener('click', closeSettings);
+document.getElementById('panel-overlay').addEventListener('click', closeSettings);
+
+async function loadSettingsFromAPI() {
+  try {
+    const r = await fetch(`${API}/api/config`);
+    const cfg = await r.json();
+    if (cfg.groq_api_key_masked) {
+      document.getElementById('cfg-groq-key').placeholder = cfg.groq_api_key_masked;
+    }
+    if (cfg.newsapi_key) document.getElementById('cfg-newsapi-key').value = cfg.newsapi_key;
+    if (cfg.gnews_key)   document.getElementById('cfg-gnews-key').value   = cfg.gnews_key;
+    if (cfg.refresh_interval_minutes) {
+      document.getElementById('cfg-interval').value = cfg.refresh_interval_minutes;
+    }
+    hotToggleOn = !!cfg.notify_hot_only;
+    updateToggle();
+    if (cfg.categories) {
+      document.querySelectorAll('#cfg-categories input').forEach(cb => {
+        cb.checked = cfg.categories.includes(cb.value);
+      });
+    }
+  } catch { /* server offline */ }
+}
+
+/* Toggle */
+const toggleEl = document.getElementById('cfg-hot-toggle');
+function updateToggle() {
+  toggleEl.classList.toggle('on', hotToggleOn);
+  toggleEl.setAttribute('aria-checked', hotToggleOn);
+}
+toggleEl.addEventListener('click', () => { hotToggleOn = !hotToggleOn; updateToggle(); });
+toggleEl.addEventListener('keydown', e => { if (e.key === ' ' || e.key === 'Enter') { hotToggleOn = !hotToggleOn; updateToggle(); } });
+
+/* Save */
+document.getElementById('save-settings-btn').addEventListener('click', async () => {
+  const groqKey  = document.getElementById('cfg-groq-key').value.trim();
+  const newsapi  = document.getElementById('cfg-newsapi-key').value.trim();
+  const gnews    = document.getElementById('cfg-gnews-key').value.trim();
+  const interval = parseInt(document.getElementById('cfg-interval').value) || 60;
+  const cats     = [...document.querySelectorAll('#cfg-categories input:checked')].map(c => c.value);
+
+  const payload = {
+    refresh_interval_minutes: interval,
+    notify_hot_only: hotToggleOn,
+    categories: cats,
+    newsapi_key: newsapi,
+    gnews_key: gnews,
+  };
+  if (groqKey) payload.groq_api_key = groqKey;
+
+  try {
+    const r = await fetch(`${API}/api/config`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const res = await r.json();
+    if (res.status === 'saved') {
+      showToast('✅ Settings saved!', 'success');
+      closeSettings();
+    } else {
+      showToast('❌ ' + (res.message || 'Save failed'), 'error');
+    }
+  } catch {
+    showToast('⚠️ Server not reachable', 'error');
+  }
+});
+
+/* ── Init ───────────────────────────────────────────────────────────────── */
+async function init() {
+  await Promise.all([loadStats(), loadArticles()]);
+  // Auto-refresh every 5 min
+  autoRefreshTimer = setInterval(() => { loadStats(); loadArticles(); }, 5 * 60 * 1000);
+}
+init();
+</script>
+</body>
+</html>
